@@ -18,3 +18,7 @@ Remember : We need to tune the bot before we add any actions to the bot for auto
 
 YOUR TEAM NEEDS YOU. DO YOUR PART
 
+Regards,
+
+CODING MASTER
+
