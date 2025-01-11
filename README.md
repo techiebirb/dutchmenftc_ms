@@ -11,6 +11,9 @@ I added the manual code that we used for teleop at this location: https://github
 To understand how the automation of out bot works 
 Check out the [docs](https://rr.brott.dev/docs/v1-0/tuning/).
 
+I highly recommend reading the doc to understand whats going on. You only have to modify this part of the code in the repo : TeamCode/src/main/java/org/firstinspires/ftc/teamcode
+you dont have to modify anything. apart from this section.
+
 Remember : We need to tune the bot before we add any actions to the bot for autonomous.
 
 YOUR TEAM NEEDS YOU. DO YOUR PART
