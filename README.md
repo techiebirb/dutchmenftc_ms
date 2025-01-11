@@ -1,6 +1,6 @@
-# Road Runner Quickstart
+# Listen up Team 
 
-Hello everyone, please clone this repo and branch out to your own branches and work on your code.
+please clone this repo and branch out to your own branches and work on your code.
 before merging it the main branch, please come to me. DO NOT MERGE LIKE AN SOUL LESS MEAT BAG.
 
 What does this code do? Good qustion
