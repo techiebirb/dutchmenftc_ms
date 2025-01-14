@@ -1,7 +1,7 @@
 # Listen up Team 
 
 please clone this repo and branch out to your own branches and work on your code.
-before merging it the main branch, please come to me. DO NOT MERGE LIKE AN SOUL LESS MEAT BAG.
+before merging it the main branch, please come to me. 
 
 What does this code do? Good qustion
 This code helps in improving the autonomous part of our bot
