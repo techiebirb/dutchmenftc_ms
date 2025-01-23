@@ -1,12 +1,16 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.widget.ToggleButton;
+
+import com.qualcomm.robotcore.eventloop.*;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @TeleOp(name = "little Bertha")
 public class OdoTest extends LinearOpMode {
@@ -22,10 +26,10 @@ public class OdoTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        DcMotor FrontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
-        DcMotor FrontRight = hardwareMap.get(DcMotor.class, "frontRight");
-        DcMotor BackLeft = hardwareMap.get(DcMotor.class, "backLeft");
-        DcMotor BackRight = hardwareMap.get(DcMotor.class, "backRight");
+        DcMotor FrontLeft = hardwareMap.get(DcMotor.class, "perp");
+        DcMotor FrontRight = hardwareMap.get(DcMotor.class, "rightFront");
+        DcMotor BackLeft = hardwareMap.get(DcMotor.class, "leftBack");
+        DcMotor BackRight = hardwareMap.get(DcMotor.class, "par");
 
         FrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         BackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -36,28 +40,31 @@ public class OdoTest extends LinearOpMode {
         BackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         /// Initiating DC motors for drivetrain complete
-
         DcMotorEx Shoulder = hardwareMap.get(DcMotorEx.class, "Shoulder");
         DcMotor Shoulder_Support = hardwareMap.get(DcMotor.class,"DC_Support");
         DcMotor Slider = hardwareMap.get(DcMotor.class,"Slider");
-        DcMotor Spool = hardwareMap.get(DcMotor.class,"Spool");
+        DcMotor Wrist = hardwareMap.get(DcMotor.class,"Wrist");
 
         Shoulder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         Shoulder_Support.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         Slider.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        Spool.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        Wrist.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Shoulder_Support.setDirection(DcMotorSimple.Direction.REVERSE);
+        Shoulder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        Shoulder_Support.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        Slider.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
 
         Shoulder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         Shoulder_Support.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         Slider.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        Wrist.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         ///Shoulder Setup Finished
 
         CRServo Claw = hardwareMap.get(CRServo.class,"Claw");
-        CRServo wrist1 = hardwareMap.get(CRServo.class,"wrist1");
-        CRServo wrist2 = hardwareMap.get(CRServo.class,"wrist2");
+
 
 
 
@@ -71,7 +78,7 @@ public class OdoTest extends LinearOpMode {
             /// Driving Meccunam
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x * 1.7; // Counteract imperfect strafing
-            double rx = -gamepad1.right_stick_x;
+            double rx = gamepad1.right_stick_x;
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
             double frontLeftPower = (y + x + rx) / denominator;
@@ -92,6 +99,8 @@ public class OdoTest extends LinearOpMode {
             boolean RB = gamepad2.right_bumper;
             boolean Sp = gamepad2.x;
             boolean LB = gamepad2.left_bumper;
+            double wrist_power_up = gamepad2.left_trigger;
+            double wrist_power_down = -gamepad2.right_trigger;
 
             boolean low = gamepad2.a;
             boolean mid = gamepad2.b;
@@ -108,11 +117,9 @@ public class OdoTest extends LinearOpMode {
                 while (Shoulder.getCurrentPosition() < -40) {
                     Shoulder.setPower(0.1);
                     Shoulder_Support.setPower(0.2);
-                    Spool.setPower(0.4);
                     if(Shoulder.getCurrentPosition()> -50 && Shoulder.getCurrentPosition()<50){
                         Shoulder.setPower(0);
                         Shoulder_Support.setPower(0);
-                        Spool.setPower(0);
                         break;
                     }
                 }
@@ -135,18 +142,15 @@ public class OdoTest extends LinearOpMode {
                 while (Shoulder.getCurrentPosition() > -340){
                     Shoulder.setPower(-0.1);
                     Shoulder_Support.setPower(-0.2);
-                    Spool.setPower(-0.5);
                     if(Shoulder.getCurrentPosition()>-330 && Shoulder.getCurrentPosition()<-300){
                         Shoulder.setPower(0);
                         Shoulder_Support.setPower(0);
-                        Spool.setPower(0);
                         break;
                     }
                 }
-
             }
 
-            while(mid){
+            while (mid){
                 Slider.setPower(1);
                 if (Slider.getCurrentPosition() > 740){
                     Slider.setPower(0);
@@ -172,11 +176,25 @@ public class OdoTest extends LinearOpMode {
 
             boolean claw_open = gamepad2.dpad_left;
             boolean claw_close = gamepad2.dpad_right;
-            boolean claw_up = gamepad2.dpad_up;
-            boolean claw_down = gamepad2.dpad_down;
 
 
 
+            Wrist.setPower(wrist_power_down);
+
+            if (gamepad2.dpad_up){
+                Wrist.setPower(-wrist_power_down);
+            }
+
+            if(top){
+                while (Wrist.getCurrentPosition() > -340){
+
+                    if(Shoulder.getCurrentPosition()>-330 && Shoulder.getCurrentPosition()<-300){
+                        Shoulder.setPower(0);
+                        Shoulder_Support.setPower(0);
+                        break;
+                    }
+                }
+            }
 
             if(claw_open){
                 Claw.setPower(-1);
@@ -186,17 +204,6 @@ public class OdoTest extends LinearOpMode {
             }
 
 
-            if(claw_up){
-//                wrist1.setPower(0.5);
-                wrist2.setPower(1);
-            }
-            if(claw_down){
-//                wrist1.setPower(1);
-                wrist2.setPower(0.1);
-            }
-            if(gamepad2.right_bumper){
-                wrist2.setPower(0.5);
-            }
 
 
             if(gamepad2.right_bumper && gamepad2.left_bumper){
@@ -207,7 +214,6 @@ public class OdoTest extends LinearOpMode {
                 Slider.setPower(0);
                 Shoulder_Support.setPower(0);
                 Shoulder.setPower(0);
-                Spool.setPower(0);
                 while (Slider.getCurrentPosition() > 500){
                     Slider.setPower(-1);
                     if(Slider.getCurrentPosition() < 200){
@@ -220,10 +226,9 @@ public class OdoTest extends LinearOpMode {
             telemetry.addData("Shoulder", Shoulder.getCurrentPosition());
             telemetry.addData("Shoulder_Support", Shoulder_Support.getCurrentPosition());
             telemetry.addData("Slider", Slider.getCurrentPosition());
-            telemetry.addData("Wrist1 Power", wrist1.getPower());
-            telemetry.addData("Wrist2 Power", wrist2.getPower());
             telemetry.addData("Steering BF", -gamepad1.left_stick_y );
             telemetry.addData("Steering LR", gamepad1.left_stick_x );
+            telemetry.addData("wrist :",Wrist.getCurrentPosition());
             telemetry.update();
 
         }
