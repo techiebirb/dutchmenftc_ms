@@ -27,13 +27,7 @@ public class Auto extends LinearOpMode {
         waitForStart();
 
         if(opModeIsActive()){
-            moveForward(1);
-            sleep(1000);
-            stopMotors();
-            slideLeft(1);
-            sleep(1000);
-            stopMotors();
-            moveBackward(1);
+            slideRight(1);
             sleep(1000);
             stopMotors();
 

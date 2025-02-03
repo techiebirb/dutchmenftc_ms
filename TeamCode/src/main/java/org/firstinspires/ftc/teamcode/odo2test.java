@@ -2,30 +2,25 @@ package org.firstinspires.ftc.teamcode;
 
 import android.widget.ToggleButton;
 
-import com.qualcomm.robotcore.eventloop.*;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.*;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.util.ElapsedTime;
-
-import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
-import com.acmerobotics.roadrunner.ParallelAction;
+import com.qualcomm.robotcore.eventloop.*;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.*;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
-@TeleOp(name = "little Bertha")
-public class OdoTest extends LinearOpMode {
+@Autonomous(name = "little Bertha_I")
+public class odo2test extends LinearOpMode {
 
     double integralSum = 0;
     double Kd = 0;
@@ -42,6 +37,7 @@ public class OdoTest extends LinearOpMode {
         DcMotor FrontRight = hardwareMap.get(DcMotor.class, "rightFront");
         DcMotor BackLeft = hardwareMap.get(DcMotor.class, "leftBack");
         DcMotor BackRight = hardwareMap.get(DcMotor.class, "rightBack");
+
 
         FrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         BackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -78,13 +74,72 @@ public class OdoTest extends LinearOpMode {
 
         CRServo Claw = hardwareMap.get(CRServo.class,"Claw");
 
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        Pose2d initialPose = new Pose2d(-20.0, 61.7, Math.toRadians(270));
+        MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
+
+        int visionOutputPosition = 1;
+
+        TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
+                .lineToYSplineHeading(33, Math.toRadians(0))
+//                .waitSeconds(2)
+                .setTangent(Math.toRadians(90))
+                .lineToY(48)
+                .setTangent(Math.toRadians(0))
+                .lineToX(32)
+                .strafeTo(new Vector2d(44.5, 30))
+                .turn(Math.toRadians(180))
+                .lineToX(47.5);
+//                .waitSeconds(3);
+        TrajectoryActionBuilder tab2 = drive.actionBuilder(initialPose)
+                .lineToY(37)
+                .setTangent(Math.toRadians(0))
+                .lineToX(18)
+                .waitSeconds(3)
+                .setTangent(Math.toRadians(0))
+                .lineToXSplineHeading(46, Math.toRadians(180))
+                .waitSeconds(3);
+        TrajectoryActionBuilder tab3 = drive.actionBuilder(initialPose)
+                .strafeTo(new Vector2d(-10, 30));
+        TrajectoryActionBuilder tab4 = drive.actionBuilder(initialPose)
+                .strafeTo(new Vector2d(-40, 30))
+                .strafeTo(new Vector2d(-40, 24))
+                .strafeTo(new Vector2d(-44, 24))
+                .strafeTo(new Vector2d(-44, 60))
+                .strafeTo(new Vector2d(-50, 24))
+                .strafeTo(new Vector2d(-55, 24))
+                .strafeTo(new Vector2d(-55, 60))
+                .strafeTo(new Vector2d(-55, 24))
+                .strafeTo(new Vector2d(-65, 24))
+                .strafeTo(new Vector2d(-65, 60));
+        TrajectoryActionBuilder tab5 = drive.actionBuilder(initialPose)
+                .turn(Math.toRadians(90));
+
+
+        Action trajectoryActionCloseOut = tab1.endTrajectory().fresh()
+                .setTangent(Math.toRadians(180))
+                .build();
+
+        while (!isStopRequested() && !opModeIsActive()) {
+            int position = visionOutputPosition;
+            telemetry.addData("Position during Init", position);
+            telemetry.update();
+        }
+
+        int startPosition = visionOutputPosition;
+        telemetry.addData("Starting Position", startPosition);
+        telemetry.update();
+        waitForStart();
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 
 
 
         waitForStart();
-
 
         while (opModeIsActive()){
 
@@ -112,8 +167,7 @@ public class OdoTest extends LinearOpMode {
             double Shoulder_power  = gamepad2.left_stick_y;
             double Slider_power = -gamepad2.right_stick_y;
 
-            double wrist_power_down = gamepad2.right_trigger;
-            double wrist_power_up = -gamepad2.left_trigger;
+            double wrist_power_down = -gamepad2.right_trigger;
 
             boolean low = gamepad2.a;
             boolean mid = gamepad2.b;
@@ -173,6 +227,7 @@ public class OdoTest extends LinearOpMode {
                 }
             }
 
+
             if(gamepad2.left_bumper){
                 Shoulder_Support.setPower(Shoulder_power);
                 Shoulder.setPower(Shoulder_power);
@@ -181,15 +236,17 @@ public class OdoTest extends LinearOpMode {
                 Shoulder.setPower(Shoulder_power);
             }
 
-            Slider.setPower(Slider_power);
-
-            if (Slider.getCurrentPosition() > 7700){
+            if (Slider.getCurrentPosition() < 2700) {
+                Slider.setPower(Slider_power);
+            }else{
                 Slider.setPower(0);
-                gamepad2.rumble(500);
             }
+
 
             boolean claw_open = gamepad2.dpad_left;
             boolean claw_close = gamepad2.dpad_right;
+
+
 
             Wrist.setPower(wrist_power_down);
 
@@ -198,51 +255,88 @@ public class OdoTest extends LinearOpMode {
             }
 
 
-//            if(gamepad2.dpad_down){
-//                while (Wrist.getCurrentPosition() > -10){
-//                    Wrist.setPower(-1);//change the values  mid = 6 low = 37 top = -68
-//                    if(Wrist.getCurrentPosition()>0 && Wrist.getCurrentPosition()<20){
-//                        Wrist.setPower(0);
-//                        break;
-//                    }
-//                }
-//            }
+            if(gamepad2.dpad_down){
+                while (Wrist.getCurrentPosition() > -10){
+                    Wrist.setPower(-1);//change the values  mid = 6 low = 37 top = -68
+                    if(Wrist.getCurrentPosition()>0 && Wrist.getCurrentPosition()<20){
+                        Wrist.setPower(0);
+                        break;
+                    }
+                }
+            }
 
-//            if(gamepad2.right_bumper){
-//                while (Wrist.getCurrentPosition() < 72){
-//                    Wrist.setPower(1);//change the values  mid = 6 low = 37 top = -68
-//                    if(Wrist.getCurrentPosition()< 80 && Wrist.getCurrentPosition()>70){
-//                        Wrist.setPower(0);
-//                        break;
-//                    }
-//                }
-//                while (Wrist.getCurrentPosition() > 72){
-//                    Wrist.setPower(-1);//change the values  mid = 6 low = 37 top = -68
-//                    if(Wrist.getCurrentPosition()< 80 && Wrist.getCurrentPosition()> 70){
-//                        Wrist.setPower(0);
-//                        break;
-//                    }
-//                }
-//            }
-//
-//            if(gamepad2.dpad_up){
-//                while (Wrist.getCurrentPosition() < 100){
-//                    Wrist.setPower(1);//change the values  mid = 6 low = 37 top = -68
-//                    if(Wrist.getCurrentPosition()>95 && Wrist.getCurrentPosition()<102){
-//                        Wrist.setPower(0);
-//                        break;
-//                    }
-//                }
-//            }
+            if(gamepad2.right_bumper){
+                while (Wrist.getCurrentPosition() < 72){
+                    Wrist.setPower(1);//change the values  mid = 6 low = 37 top = -68
+                    if(Wrist.getCurrentPosition()< 80 && Wrist.getCurrentPosition()>70){
+                        Wrist.setPower(0);
+                        break;
+                    }
+                }
+                while (Wrist.getCurrentPosition() > 72){
+                    Wrist.setPower(-1);//change the values  mid = 6 low = 37 top = -68
+                    if(Wrist.getCurrentPosition()< 80 && Wrist.getCurrentPosition()> 70){
+                        Wrist.setPower(0);
+                        break;
+                    }
+                }
+            }
+
+            if(gamepad2.dpad_up){
+                while (Wrist.getCurrentPosition() < 100){
+                    Wrist.setPower(1);//change the values  mid = 6 low = 37 top = -68
+                    if(Wrist.getCurrentPosition()>95 && Wrist.getCurrentPosition()<102){
+                        Wrist.setPower(0);
+                        break;
+                    }
+                }
+            }
 
             if(claw_open){
-                Claw.setPower(-0.3);
+                Claw.setPower(-0.6);
             }
             if(claw_close){
-                Claw.setPower(0.2);
+                Claw.setPower(-0.1);
             }
 
 
+            Action trajectoryActionChosen;
+            if (startPosition == 1) {
+                trajectoryActionChosen = tab4.build();
+            } else if (startPosition == 2) {
+                trajectoryActionChosen = tab2.build();
+            } else {
+                trajectoryActionChosen = tab3.build();
+            }
+
+            if(gamepad2.x) {
+                Actions.runBlocking(
+                        new SequentialAction(
+                                trajectoryActionChosen,
+                                trajectoryActionCloseOut
+                        )
+                );
+            }                        /////////////////////////////////////////
+
+
+
+
+            if(gamepad2.right_bumper && gamepad2.left_bumper){
+                FrontLeft.setPower(frontLeftPower);
+                FrontRight.setPower(frontRightPower);
+                BackLeft.setPower(backLeftPower);
+                BackRight.setPower(backRightPower);
+                Slider.setPower(0);
+                Shoulder_Support.setPower(0);
+                Shoulder.setPower(0);
+                while (Slider.getCurrentPosition() > 500){
+                    Slider.setPower(-1);
+                    if(Slider.getCurrentPosition() < 200){
+                        Slider.setPower(0);
+                    }
+                }
+
+            }
 
             telemetry.addData("Shoulder", Shoulder.getCurrentPosition());
             telemetry.addData("Shoulder_Support", Shoulder_Support.getCurrentPosition());

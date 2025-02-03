@@ -16,6 +16,7 @@ import com.acmerobotics.roadrunner.ParallelAction;
 // Non-RR imports
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -28,15 +29,18 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 public class magic extends LinearOpMode {
 
+    public class Shoulder {
 
-
-    public static class Shoulder {
-        private final DcMotorEx Shoulder;
+        private DcMotorEx shoulder;
+        private DcMotorEx shoulder_support;
 
         public Shoulder(HardwareMap hardwareMap) {
-            Shoulder = hardwareMap.get(DcMotorEx.class, "Shoulder");
-            Shoulder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            Shoulder.setDirection(DcMotorSimple.Direction.FORWARD);
+            shoulder = hardwareMap.get(DcMotorEx.class, "Shoulder");
+            shoulder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            shoulder.setDirection(DcMotorSimple.Direction.FORWARD);
+            shoulder_support = hardwareMap.get(DcMotorEx.class, "DC_Support");
+            shoulder_support.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            shoulder_support.setDirection(DcMotorSimple.Direction.FORWARD);
         }
 
         public class ShoulderUp implements Action {
@@ -45,22 +49,24 @@ public class magic extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    Shoulder.setPower(0.8);
+                    shoulder.setPower(-0.6);
+                    shoulder_support.setPower(-0.6);
                     initialized = true;
                 }
 
-                double pos = Shoulder.getCurrentPosition();
-                packet.put("ShoulderPos", pos);
-                if (pos > 92) {                  // Sholder position
+                double pos = shoulder.getCurrentPosition();
+                packet.put("Shoulder_Pos", pos);
+                if (pos > -400) {                    /// Shoulder pos
                     return true;
                 } else {
-                    Shoulder.setPower(0);
+                    shoulder.setPower(0);
+                    shoulder_support.setPower(0);
                     return false;
                 }
             }
         }
 
-        public Action ShoulderUp(){
+        public Action shoulderup() {
             return new ShoulderUp();
         }
 
@@ -70,33 +76,35 @@ public class magic extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    Shoulder.setPower(0.8);
+                    shoulder.setPower(0.6);
+                    shoulder_support.setPower(0.6);
                     initialized = true;
                 }
 
-                double pos = Shoulder.getCurrentPosition();
-                packet.put("ShoulderPos", pos);
-                if (pos < 446) {                  // Sholder position
+                double pos = shoulder.getCurrentPosition();
+                packet.put("Shoulder_Pos", pos);
+                if (pos < 10) {                          /// Shoulder pos
                     return true;
                 } else {
-                    Shoulder.setPower(0);
+                    shoulder.setPower(0);
+                    shoulder_support.setPower(0);
                     return false;
                 }
             }
         }
-        public Action ShoulderDown(){
+
+        public Action shoulderdown() {
             return new ShoulderDown();
         }
+    } /////////////////////////////////////////////////////////////////////////////
 
-    }
+    public class Slider{
+        private DcMotorEx slider;
 
-    public static class Slider {
-        private final DcMotorEx Slider;
-
-        public Slider(HardwareMap hardwareMap) {
-            Slider = hardwareMap.get(DcMotorEx.class, "Slider");
-            Slider.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            Slider.setDirection(DcMotorSimple.Direction.FORWARD);
+        public Slider(HardwareMap hardwareMap){
+            slider = hardwareMap.get(DcMotorEx.class, "Slider");
+            slider.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            slider.setDirection(DcMotorSimple.Direction.FORWARD);
         }
 
         public class SliderUp implements Action {
@@ -105,22 +113,22 @@ public class magic extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    Slider.setPower(0.8);
+                    slider.setPower(1);
                     initialized = true;
                 }
 
-                double pos = Slider.getCurrentPosition();
+                double pos = slider.getCurrentPosition();
                 packet.put("Slider", pos);
-                if (pos < 1000) {                  // Sholder position
+                if (pos < 2000) {                        /// Slider pos
                     return true;
                 } else {
-                    Slider.setPower(0);
+                    slider.setPower(0);
                     return false;
                 }
             }
         }
 
-        public Action SliderUp(){
+        public Action sliderup() {
             return new SliderUp();
         }
 
@@ -130,48 +138,166 @@ public class magic extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    Slider.setPower(0.8);
+                    slider.setPower(-1);
                     initialized = true;
                 }
 
-                double pos = Slider.getCurrentPosition();
+                double pos = slider.getCurrentPosition();
                 packet.put("Slider", pos);
-                if (pos > 10) {                  // Sholder position
+                if (pos > 10) {                                  /// Slider pos
                     return true;
                 } else {
-                    Slider.setPower(0);
+                    slider.setPower(0);
                     return false;
                 }
             }
         }
-        public Action SliderDown(){
+
+        public Action sliderdown() {
             return new SliderDown();
         }
+    }///////////////////////////////////////////////////////////////////
 
-    }
+    public class Claw{
+        private DcMotorEx wrist;
+        private CRServo claw;
 
+        public Claw(HardwareMap hardwareMap){
+            claw = hardwareMap.get(CRServo.class, "Claw");
+            wrist = hardwareMap.get(DcMotorEx.class,"Wrist");
+        }
 
+        public class WristUp implements Action {
+            private boolean initialized = false;
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                if (!initialized) {
+                    wrist.setPower(1);
+                    initialized = true;
+                }
+
+                double pos = wrist.getCurrentPosition();
+                packet.put("Slider", pos);
+                if (pos > -10) {                                 /// wrist pos
+                    return true;
+                } else {
+                    wrist.setPower(0);
+                    return false;
+                }
+            }
+        }
+
+        public Action wristup() {
+            return new WristUp();
+        }
+
+        public class WristDw implements Action {
+            private boolean initialized = false;
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                if (!initialized) {
+                    wrist.setPower(1);
+                    initialized = true;
+                }
+
+                double pos = wrist.getCurrentPosition();
+                packet.put("Slider", pos);
+                if (pos > -10) {                   /// wrist pos
+                    return true;
+                } else {
+                    wrist.setPower(0);
+                    return false;
+                }
+            }
+        }
+
+        public Action wristdw() {
+            return new WristDw();
+        }
+
+        public class ClawOp implements Action {
+            private boolean initialized = false;
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                if (!initialized) {
+                    claw.setPower(-0.3);              /// claw pos
+                    initialized = true;
+                }
+
+                double pos = claw.getPower();
+                packet.put("Slider", pos);
+                if (pos > -0.3) {                   /// claw pos
+                    return true;
+                } else {
+                    claw.setPower(0);
+                    return false;
+                }
+            }
+        }
+
+        public Action clawop() {
+            return new ClawOp();
+        }
+
+        public class ClawCl implements Action {
+            private boolean initialized = false;
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                if (!initialized) {
+                    claw.setPower(0.2);       /// claw pos
+                    initialized = true;
+                }
+                return true;
+
+//                double pos = claw.getPower();
+//                packet.put("Slider", pos);
+//                if (pos > -0.3) {             /// claw pos
+//                    return true;
+//                } else {
+//                    claw.setPower(0);
+//                    return false;
+//                }
+            }
+        }
+
+        public Action clawcl() {
+            return new ClawCl();
+        }
+
+    }///////////////////////////////////////////////////////////////////
 
     @Override
     public void runOpMode() throws InterruptedException {
-        Pose2d initialPose = new Pose2d(-20.0, 61.7, Math.toRadians(270));
+        Pose2d initialPose = new Pose2d(20.0, 61.7, Math.toRadians(225));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
-        Shoulder Shoulder = new Shoulder(hardwareMap);
-        Slider Slider = new Slider(hardwareMap);
+        Shoulder shoulder = new Shoulder(hardwareMap);
+        Slider slider = new Slider(hardwareMap);
+        Claw claw = new Claw(hardwareMap);
+        Claw wrist = new Claw(hardwareMap);
+
 
         int visionOutputPosition = 1;
 
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
-                .lineToYSplineHeading(33, Math.toRadians(0))
-                .waitSeconds(2)
-                .setTangent(Math.toRadians(90))
                 .lineToY(48)
-                .setTangent(Math.toRadians(0))
-                .lineToX(32)
-                .strafeTo(new Vector2d(44.5, 30))
-                .turn(Math.toRadians(180))
-                .lineToX(47.5)
-                .waitSeconds(3);
+                .turn(Math.toRadians(-22.5))
+                .strafeTo(new Vector2d(32, 45))
+                .turn(Math.toRadians(22.5))
+                .strafeTo(new Vector2d(-4.5, 45))
+                .turn(Math.toRadians(-22.5))
+                .strafeTo(new Vector2d(5, 45))
+                .turn(Math.toRadians(22.4))
+                .strafeTo(new Vector2d(10, 45))
+                .turn(Math.toRadians(-22.5))
+                .strafeTo(new Vector2d(5, 45))
+                .turn(Math.toRadians(75))
+                .turn(Math.toRadians(-32.5 ))
+                .strafeTo(new Vector2d(5, 45))
+                .turn(Math.toRadians(22.4));
         TrajectoryActionBuilder tab2 = drive.actionBuilder(initialPose)
                 .lineToY(37)
                 .setTangent(Math.toRadians(0))
@@ -181,28 +307,37 @@ public class magic extends LinearOpMode {
                 .lineToXSplineHeading(46, Math.toRadians(180))
                 .waitSeconds(3);
         TrajectoryActionBuilder tab3 = drive.actionBuilder(initialPose)
-                .lineToYSplineHeading(40, Math.toRadians(180))
-                .strafeTo(new Vector2d(56, 40));
+                .strafeTo(new Vector2d(-10, 30));
+        TrajectoryActionBuilder tab4 = drive.actionBuilder(initialPose)
+                .strafeTo(new Vector2d(-40, 30))
+                .strafeTo(new Vector2d(-40, 24))
+                .strafeTo(new Vector2d(-44, 24))
+                .strafeTo(new Vector2d(-44, 60))
+                .strafeTo(new Vector2d(-50, 24))
+                .strafeTo(new Vector2d(-55, 24))
+                .strafeTo(new Vector2d(-55, 60))
+                .strafeTo(new Vector2d(-55, 24))
+                .strafeTo(new Vector2d(-65, 24))
+                .strafeTo(new Vector2d(-65, 60));
+        TrajectoryActionBuilder tab5 = drive.actionBuilder(initialPose)
+                .turn(Math.toRadians(90));
         Action trajectoryActionCloseOut = tab1.endTrajectory().fresh()
                 .setTangent(Math.toRadians(180))
                 .build();
-
         while (!isStopRequested() && !opModeIsActive()) {
             int position = visionOutputPosition;
             telemetry.addData("Position during Init", position);
             telemetry.update();
         }
-
         int startPosition = visionOutputPosition;
         telemetry.addData("Starting Position", startPosition);
         telemetry.update();
         waitForStart();
-
+       
         if (isStopRequested()) return;
-
         Action trajectoryActionChosen;
         if (startPosition == 1) {
-            trajectoryActionChosen = tab1.build();
+            trajectoryActionChosen = tab4.build();
         } else if (startPosition == 2) {
             trajectoryActionChosen = tab2.build();
         } else {
@@ -211,12 +346,12 @@ public class magic extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-                        trajectoryActionChosen,
-                        Shoulder.ShoulderUp(),
-                        Shoulder.ShoulderDown(),
-
-                        Slider.SliderUp(),
-                        Slider.SliderDown(),
+                        shoulder.shoulderup(),
+                        tab4.build(),
+                        shoulder.shoulderdown(),
+                        slider.sliderup(),
+                        slider.sliderdown(),
+                        claw.clawcl(),
                         trajectoryActionCloseOut
                 )
         );
