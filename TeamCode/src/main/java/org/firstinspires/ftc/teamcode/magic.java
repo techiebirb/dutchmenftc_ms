@@ -56,11 +56,12 @@ public class magic extends LinearOpMode {
 
                 double pos = shoulder.getCurrentPosition();
                 packet.put("Shoulder_Pos", pos);
-                if (pos > -400) {                    /// Shoulder pos
+                if (pos > -310) {                    /// Shoulder pos
                     return true;
                 } else {
                     shoulder.setPower(0);
                     shoulder_support.setPower(0);
+                    sleep(200);
                     return false;
                 }
             }
@@ -83,11 +84,12 @@ public class magic extends LinearOpMode {
 
                 double pos = shoulder.getCurrentPosition();
                 packet.put("Shoulder_Pos", pos);
-                if (pos < 10) {                          /// Shoulder pos
+                if (pos < -10) {                    /// Shoulder pos
                     return true;
                 } else {
                     shoulder.setPower(0);
                     shoulder_support.setPower(0);
+                    sleep(200);
                     return false;
                 }
             }
@@ -119,10 +121,10 @@ public class magic extends LinearOpMode {
 
                 double pos = slider.getCurrentPosition();
                 packet.put("Slider", pos);
-                if (pos < 2000) {                        /// Slider pos
+                if (pos < 2100) {                        /// Slider pos
                     return true;
                 } else {
-                    slider.setPower(0);
+                    slider.setPower(0.1);
                     return false;
                 }
             }
@@ -144,10 +146,11 @@ public class magic extends LinearOpMode {
 
                 double pos = slider.getCurrentPosition();
                 packet.put("Slider", pos);
-                if (pos > 10) {                                  /// Slider pos
+                if (pos > 100) {                                  /// Slider pos
                     return true;
                 } else {
                     slider.setPower(0);
+                    sleep(200);
                     return false;
                 }
             }
@@ -179,10 +182,11 @@ public class magic extends LinearOpMode {
 
                 double pos = wrist.getCurrentPosition();
                 packet.put("Slider", pos);
-                if (pos > -10) {                                 /// wrist pos
+                if (pos < 75) {                                 /// wrist pos
                     return true;
                 } else {
                     wrist.setPower(0);
+                    sleep(200);
                     return false;
                 }
             }
@@ -198,16 +202,17 @@ public class magic extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
-                    wrist.setPower(1);
+                    wrist.setPower(-1);
                     initialized = true;
                 }
 
                 double pos = wrist.getCurrentPosition();
                 packet.put("Slider", pos);
-                if (pos > -10) {                   /// wrist pos
+                if (pos > 10) {                   /// wrist pos
                     return true;
                 } else {
                     wrist.setPower(0);
+                    sleep(500);
                     return false;
                 }
             }
@@ -232,7 +237,7 @@ public class magic extends LinearOpMode {
                 if (pos > -0.3) {                   /// claw pos
                     return true;
                 } else {
-                    claw.setPower(0);
+                    sleep(500);
                     return false;
                 }
             }
@@ -251,16 +256,15 @@ public class magic extends LinearOpMode {
                     claw.setPower(0.2);       /// claw pos
                     initialized = true;
                 }
-                return true;
 
-//                double pos = claw.getPower();
-//                packet.put("Slider", pos);
-//                if (pos > -0.3) {             /// claw pos
-//                    return true;
-//                } else {
-//                    claw.setPower(0);
-//                    return false;
-//                }
+
+                double pos = claw.getPower();
+                packet.put("Slider", pos);
+                if (pos < 0.2) {             /// claw pos
+                    return true;
+                } else {
+                    return false;
+                }
             }
         }
 
@@ -272,7 +276,7 @@ public class magic extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        Pose2d initialPose = new Pose2d(20.0, 61.7, Math.toRadians(225));
+        Pose2d initialPose = new Pose2d(-24.5, -65, Math.toRadians(270));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
         Shoulder shoulder = new Shoulder(hardwareMap);
         Slider slider = new Slider(hardwareMap);
@@ -307,7 +311,8 @@ public class magic extends LinearOpMode {
                 .lineToXSplineHeading(46, Math.toRadians(180))
                 .waitSeconds(3);
         TrajectoryActionBuilder tab3 = drive.actionBuilder(initialPose)
-                .strafeTo(new Vector2d(-10, 30));
+                .strafeTo(new Vector2d(20, 30))  // 20, 61.7, 45, 55  -- 60, 60
+                .turn(Math.toRadians(-20.5));
         TrajectoryActionBuilder tab4 = drive.actionBuilder(initialPose)
                 .strafeTo(new Vector2d(-40, 30))
                 .strafeTo(new Vector2d(-40, 24))
@@ -320,7 +325,7 @@ public class magic extends LinearOpMode {
                 .strafeTo(new Vector2d(-65, 24))
                 .strafeTo(new Vector2d(-65, 60));
         TrajectoryActionBuilder tab5 = drive.actionBuilder(initialPose)
-                .turn(Math.toRadians(90));
+                .waitSeconds(0.5);
         Action trajectoryActionCloseOut = tab1.endTrajectory().fresh()
                 .setTangent(Math.toRadians(180))
                 .build();
@@ -346,13 +351,24 @@ public class magic extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
+                        claw.clawcl(),
+                        tab3.build(),
                         shoulder.shoulderup(),
-                        tab4.build(),
+                        slider.sliderup(),
+                        wrist.wristup(),
+                        claw.clawop(),
+                        wrist.wristdw(),
+                        slider.sliderdown(),
                         shoulder.shoulderdown(),
+                        shoulder.shoulderup(),
                         slider.sliderup(),
                         slider.sliderdown(),
-                        claw.clawcl(),
-                        trajectoryActionCloseOut
+                        shoulder.shoulderdown()
+
+                        ////////////////////////////
+
+
+
                 )
         );
     }

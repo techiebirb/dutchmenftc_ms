@@ -57,6 +57,8 @@ public class OdoTest extends LinearOpMode {
         DcMotor Slider = hardwareMap.get(DcMotor.class,"Slider");
         DcMotor Wrist = hardwareMap.get(DcMotor.class,"Wrist");
 
+        Wrist.setDirection(DcMotorSimple.Direction.FORWARD);
+
         Shoulder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         Shoulder_Support.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         Slider.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -86,7 +88,7 @@ public class OdoTest extends LinearOpMode {
         waitForStart();
 
 
-        while (opModeIsActive()){
+        while (opModeIsActive()) {
 
 
             /// Gamepad 1
@@ -109,28 +111,28 @@ public class OdoTest extends LinearOpMode {
 
             /// Gamepad 2
 
-            double Shoulder_power  = gamepad2.left_stick_y;
+            double Shoulder_power = gamepad2.left_stick_y;
             double Slider_power = -gamepad2.right_stick_y;
 
             double wrist_power_down = gamepad2.right_trigger;
-            double wrist_power_up = -gamepad2.left_trigger;
+
 
             boolean low = gamepad2.a;
             boolean mid = gamepad2.b;
             boolean top = gamepad2.y;
 
 
-            if(low){
-                while (Slider.getCurrentPosition() > 500){
+            if (low) {
+                while (Slider.getCurrentPosition() > 500) {
                     Slider.setPower(-1);
-                    if(Slider.getCurrentPosition() < 200){
+                    if (Slider.getCurrentPosition() < 200) {
                         Slider.setPower(0);
                     }
                 }
                 while (Shoulder.getCurrentPosition() < 0) {
                     Shoulder.setPower(0.3);
                     Shoulder_Support.setPower(0.2);
-                    if(Shoulder.getCurrentPosition()> 10 && Shoulder.getCurrentPosition()<0){
+                    if (Shoulder.getCurrentPosition() > 10 && Shoulder.getCurrentPosition() < 0) {
                         Shoulder.setPower(0);
                         Shoulder_Support.setPower(0);
                         break;
@@ -138,34 +140,34 @@ public class OdoTest extends LinearOpMode {
                 }
             }
 
-            if(gamepad1.right_bumper){
-                FrontLeft.setPower(frontLeftPower*0.3);
-                FrontRight.setPower(frontRightPower*0.3);
-                BackLeft.setPower((backLeftPower*0.3));
-                BackRight.setPower((backRightPower*0.3));
+            if (gamepad1.right_bumper) {
+                FrontLeft.setPower(frontLeftPower * 0.3);
+                FrontRight.setPower(frontRightPower * 0.3);
+                BackLeft.setPower((backLeftPower * 0.3));
+                BackRight.setPower((backRightPower * 0.3));
             }
 
-            if(gamepad2.b){
-                while (Slider.getCurrentPosition() < 2716){
+            if (gamepad2.b) {
+                while (Slider.getCurrentPosition() < 2716) {
                     Slider.setPower(1);
-                    if(Slider.getCurrentPosition() > 2800){
+                    if (Slider.getCurrentPosition() > 2800) {
                         Slider.setPower(0);
                         break;
                     }
                 }
             }
 
-            if(top){
-                while (Slider.getCurrentPosition() > 500){
+            if (top) {
+                while (Slider.getCurrentPosition() > 500) {
                     Slider.setPower(-1);
-                    if(Slider.getCurrentPosition() < 200){
+                    if (Slider.getCurrentPosition() < 200) {
                         Slider.setPower(0);
                     }
                 }
-                while (Shoulder.getCurrentPosition() > -420){
+                while (Shoulder.getCurrentPosition() > -420) {
                     Shoulder.setPower(-0.3);
                     Shoulder_Support.setPower(-0.2);
-                    if(Shoulder.getCurrentPosition()>-410 && Shoulder.getCurrentPosition()<-420){
+                    if (Shoulder.getCurrentPosition() > -410 && Shoulder.getCurrentPosition() < -420) {
                         Shoulder.setPower(0);
                         Shoulder_Support.setPower(0);
                         break;
@@ -173,19 +175,21 @@ public class OdoTest extends LinearOpMode {
                 }
             }
 
-            if(gamepad2.left_bumper){
+            if (gamepad2.left_bumper) {
                 Shoulder_Support.setPower(Shoulder_power);
                 Shoulder.setPower(Shoulder_power);
-            }else{
-                Shoulder_Support.setPower(Shoulder_power*0.3);
+            } else {
+                Shoulder_Support.setPower(Shoulder_power * 0.3);
                 Shoulder.setPower(Shoulder_power);
             }
 
             Slider.setPower(Slider_power);
 
-            if (Slider.getCurrentPosition() > 7700){
-                Slider.setPower(0);
-                gamepad2.rumble(500);
+            if (Shoulder.getCurrentPosition() > -100){
+                if (Slider.getCurrentPosition() > 1400) {
+                    Slider.setPower(0);
+                    gamepad2.rumble(500);
+                }
             }
 
             boolean claw_open = gamepad2.dpad_left;
@@ -193,7 +197,7 @@ public class OdoTest extends LinearOpMode {
 
             Wrist.setPower(wrist_power_down);
 
-            if (gamepad2.x){
+            if (gamepad2.dpad_down){
                 Wrist.setPower(-wrist_power_down);
             }
 
